@@ -1,0 +1,9 @@
+# Compiled binaries
+pool
+*.o
+*.out
+a.out
+
+# Editor / OS junk
+.vscode/
+.DS_Store
