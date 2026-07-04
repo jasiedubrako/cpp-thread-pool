@@ -3,19 +3,24 @@
 #include <vector>
 #include <queue>
 #include <mutex>
+#include <condition_variable>
+#include <chrono>
 
 using namespace std;
 
 queue<int> tasks;
-int processed = 0;
 mutex mtx;
+condition_variable cv;
+bool done = false;
+int processed = 0;
 
 void worker() {
     while(true) {
         int task;
         {
-            lock_guard<mutex> lock(mtx);
-            if (tasks.empty()) return;
+            unique_lock<mutex> lock(mtx);
+            cv.wait(lock, []{ return !tasks.empty() || done; });
+            if (tasks.empty() && done) return;
             task = tasks.front();
             tasks.pop();
             processed++;
@@ -26,17 +31,26 @@ void worker() {
 
 
 int main() {
-    const int N = 100000;
-    for (int i = 0; i < N; ++i) tasks.push(i);
     vector<thread> threads;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 4; i++) {
         threads.emplace_back(worker);
     }
 
-    for (auto& t : threads) {
-        t.join();
+    this_thread::sleep_for(chrono::seconds(2));
+
+    for (int i = 0; i < 8; ++i) {
+        lock_guard<mutex> lock(mtx); tasks.push(i);
+        cv.notify_one();
     }
 
-    cout << "Enqueued: " << N << " Processed: " << processed << "\n";
+    {
+        lock_guard<mutex> lock(mtx); done = true;
+        cv.notify_all();
+    }
+
+    for (auto& t : threads) t.join();
+
+    cout << "Processed: " << processed << "\n";
+
     return 0;
 }
