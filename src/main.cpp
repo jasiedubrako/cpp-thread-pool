@@ -1,56 +1,21 @@
+#include "threadpool.hpp"
 #include <iostream>
-#include <thread>
-#include <vector>
-#include <queue>
 #include <mutex>
-#include <condition_variable>
 #include <chrono>
 
-using namespace std;
-
-queue<int> tasks;
-mutex mtx;
-condition_variable cv;
-bool done = false;
-int processed = 0;
-
-void worker() {
-    while(true) {
-        int task;
-        {
-            unique_lock<mutex> lock(mtx);
-            cv.wait(lock, []{ return !tasks.empty() || done; });
-            if (tasks.empty() && done) return;
-            task = tasks.front();
-            tasks.pop();
-            processed++;
-        }
-        (void)task;
-    }
-}
-
-
 int main() {
-    vector<thread> threads;
-    for (int i = 0; i < 4; i++) {
-        threads.emplace_back(worker);
-    }
-
-    this_thread::sleep_for(chrono::seconds(2));
-
-    for (int i = 0; i < 8; ++i) {
-        lock_guard<mutex> lock(mtx); tasks.push(i);
-        cv.notify_one();
-    }
-
+    std::mutex cout_mtx;   // keep console output from interleaving
     {
-        lock_guard<mutex> lock(mtx); done = true;
-        cv.notify_all();
-    }
-
-    for (auto& t : threads) t.join();
-
-    cout << "Processed: " << processed << "\n";
-
+        ThreadPool pool(4);
+        for (int i = 0; i < 8; ++i) {
+            pool.submit([i, &cout_mtx] {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                std::lock_guard<std::mutex> lock(cout_mtx);
+                std::cout << "Task " << i << " handled by thread "
+                          << std::this_thread::get_id() << "\n";
+            });
+        }
+    }   // <-- pool goes out of scope here: destructor drains tasks, joins threads
+    std::cout << "All tasks complete.\n";
     return 0;
 }

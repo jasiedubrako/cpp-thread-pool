@@ -15,10 +15,10 @@ g++ -std=c++17 -pthread src/main.cpp -o pool
 
 ## Roadmap
 - [x] Threads 101
-- [ ] Shared task queue
-- [ ] Mutex-protected queue
-- [ ] Condition-variable signalling
-- [ ] ThreadPool class
+- [x] Shared task queue
+- [x] Mutex-protected queue
+- [x] Condition-variable signalling
+- [x] ThreadPool class
 - [ ] Benchmark vs. sequential execution
 - [ ] Graceful shutdown
 - [ ] Futures via std::packaged_task
