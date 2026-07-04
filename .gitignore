@@ -3,6 +3,8 @@ pool
 *.o
 *.out
 a.out
+bench
+bench_gbench
 
 # Editor / OS junk
 .vscode/
