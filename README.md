@@ -34,10 +34,11 @@ Counting primes below 3,000,000, sequential vs. pool (Google Benchmark):
 
 | Execution   | Time   | Speedup |
 |-------------|--------|---------|
-| Sequential  | 603 ms | 1.0×    |
-| Thread pool | 320 ms | ~1.9×   |
+| Sequential  | 381 ms | 1.0×    |
+| Thread pool | 79 ms  | ~4.8×   |
 
-Measured on 2 physical cores; speedup scales with physical core count.
+Measured across 12 hardware threads on a 10-core hybrid CPU (Intel i7-1365U).
+Speedup scales with available cores.
 
 ## Roadmap
 - [x] Thread basics, shared queue, mutex, condition variable
